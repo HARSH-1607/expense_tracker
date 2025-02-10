@@ -5,9 +5,9 @@
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "https://github.com/HARSH-1607/expense-tracker.git"
+    "url": "https://github.com/HARSH-1607/expense_tracker.git"
   },
-  "homepage": "https://HARSH-1607.github.io/expense-tracker",
+  "homepage": "https://HARSH-1607.github.io/expense_tracker",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

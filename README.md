@@ -27,7 +27,7 @@ A modern expense tracking application built with React, TypeScript, and Material
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/HARSH-1607/expense-tracker.git
+git clone https://github.com/HARSH-1607/expense_tracker.git
 cd expense-tracker
 ```
 
