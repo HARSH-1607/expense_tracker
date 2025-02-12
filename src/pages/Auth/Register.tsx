@@ -7,7 +7,6 @@ import {
   Button,
   Link,
   Alert,
-  CircularProgress,
   useTheme,
   IconButton,
   InputAdornment,
@@ -17,7 +16,7 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { updateUser } from '../../features/user/userSlice';
+import { setUser } from '../../features/user/userSlice';
 
 interface FormData {
   name: string;
@@ -50,11 +49,25 @@ const Register = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
-  const validateForm = (): boolean => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: name === 'agreeToTerms' ? checked : value,
+    }));
+    // Clear error when user starts typing
+    if (formErrors[name as keyof FormErrors]) {
+      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    
+    // Validate form
     const errors: FormErrors = {};
     let isValid = true;
 
@@ -92,60 +105,31 @@ const Register = () => {
       isValid = false;
     }
 
-    setFormErrors(errors);
-    return isValid;
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'agreeToTerms' ? checked : value,
-    }));
-    // Clear error when user starts typing
-    if (formErrors[name as keyof FormErrors]) {
-      setFormErrors((prev) => ({ ...prev, [name]: undefined }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
+    if (!isValid) {
+      setFormErrors(errors);
       return;
     }
 
-    setLoading(true);
-    setError(null);
-
     try {
-      // Here you would typically make an API call to register the user
-      // For now, we'll simulate a successful registration
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Simulate successful registration
-      dispatch(
-        updateUser({
-          id: '1',
-          name: formData.name,
-          email: formData.email,
-          preferences: {
-            theme: 'system',
-            defaultCurrency: 'USD',
-            notifications: {
-              billReminders: true,
-              budgetAlerts: true,
-              goalProgress: true,
-            },
+      // Mock registration success
+      dispatch(setUser({
+        id: '1',
+        email: formData.email,
+        name: formData.name,
+        preferences: {
+          currency: 'USD',
+          language: 'en',
+          theme: 'light',
+          notifications: {
+            email: true,
+            push: true,
+            billReminders: true,
           },
-        })
-      );
-
+        },
+      }));
       navigate('/');
-    } catch (err) {
+    } catch (error) {
       setError('Registration failed. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -266,13 +250,14 @@ const Register = () => {
                 name="agreeToTerms"
                 checked={formData.agreeToTerms}
                 onChange={handleInputChange}
+                color="primary"
               />
             }
             label="I agree to the Terms and Conditions"
-            sx={{ mb: 1 }}
+            sx={{ mb: 2 }}
           />
           {formErrors.agreeToTerms && (
-            <Typography color="error" variant="caption" display="block" sx={{ mb: 2 }}>
+            <Typography color="error" variant="caption" sx={{ mt: -1, mb: 2, display: 'block' }}>
               {formErrors.agreeToTerms}
             </Typography>
           )}
@@ -282,26 +267,25 @@ const Register = () => {
             variant="contained"
             fullWidth
             size="large"
-            disabled={loading}
             sx={{ mb: 2 }}
           >
-            {loading ? <CircularProgress size={24} /> : 'Sign Up'}
+            Create Account
           </Button>
         </form>
 
         <Box sx={{ textAlign: 'center' }}>
-          <Typography variant="body2" display="inline">
+          <Typography variant="body2">
             Already have an account?{' '}
+            <Link
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate('/auth/login');
+              }}
+            >
+              Sign In
+            </Link>
           </Typography>
-          <Link
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('/auth/login');
-            }}
-          >
-            Sign In
-          </Link>
         </Box>
       </Paper>
     </Box>

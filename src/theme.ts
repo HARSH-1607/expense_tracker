@@ -1,22 +1,26 @@
-import { createTheme } from '@mui/material/styles';
+import { createTheme, ThemeOptions } from '@mui/material';
+import type {} from '@mui/x-date-pickers/themeAugmentation';
 
 // Common components styles
-const commonComponents = {
+const commonComponents: ThemeOptions['components'] = {
   MuiCssBaseline: {
     styleOverrides: {
       body: {
-        transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
+        transition: 'background-color 0.2s ease',
       },
     },
   },
   MuiPaper: {
     styleOverrides: {
       root: {
-        transition: 'background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+        transition: 'background-color 0.2s ease',
       },
     },
   },
   MuiButton: {
+    defaultProps: {
+      disableElevation: true,
+    },
     styleOverrides: {
       root: {
         borderRadius: 8,
@@ -29,7 +33,6 @@ const commonComponents = {
     styleOverrides: {
       root: {
         borderRadius: 12,
-        padding: '24px',
       },
     },
   },
@@ -39,42 +42,22 @@ const commonComponents = {
         width: 42,
         height: 26,
         padding: 0,
-        '& .MuiSwitch-switchBase': {
-          padding: 0,
-          margin: 2,
-          transitionDuration: '300ms',
-          '&.Mui-checked': {
-            transform: 'translateX(16px)',
-            color: '#fff',
-            '& + .MuiSwitch-track': {
-              opacity: 1,
-              border: 0,
-            },
-            '&.Mui-disabled + .MuiSwitch-track': {
-              opacity: 0.5,
-            },
-          },
-          '&.Mui-focusVisible .MuiSwitch-thumb': {
-            color: '#33cf4d',
-            border: '6px solid #fff',
-          },
-          '&.Mui-disabled .MuiSwitch-thumb': {
-            color: '#999',
-          },
-          '&.Mui-disabled + .MuiSwitch-track': {
-            opacity: 0.3,
-          },
+      },
+      switchBase: {
+        padding: 1,
+        '&.Mui-checked': {
+          transform: 'translateX(16px)',
+          color: '#fff',
         },
-        '& .MuiSwitch-thumb': {
-          boxSizing: 'border-box',
-          width: 22,
-          height: 22,
-        },
-        '& .MuiSwitch-track': {
-          borderRadius: 26 / 2,
-          opacity: 1,
-          transition: 'background-color 0.3s ease-in-out',
-        },
+      },
+      thumb: {
+        width: 24,
+        height: 24,
+      },
+      track: {
+        borderRadius: 13,
+        border: '1px solid #e0e0e0',
+        opacity: 1,
       },
     },
   },
@@ -86,31 +69,13 @@ export const lightTheme = createTheme({
     mode: 'light',
     primary: {
       main: '#2196f3',
-      light: '#64b5f6',
-      dark: '#1976d2',
     },
     secondary: {
       main: '#f50057',
-      light: '#ff4081',
-      dark: '#c51162',
     },
     background: {
       default: '#f5f5f5',
       paper: '#ffffff',
-    },
-    text: {
-      primary: 'rgba(0, 0, 0, 0.87)',
-      secondary: 'rgba(0, 0, 0, 0.6)',
-    },
-    expense: {
-      main: '#f44336',
-      light: '#e57373',
-      dark: '#d32f2f',
-    },
-    income: {
-      main: '#4caf50',
-      light: '#81c784',
-      dark: '#388e3c',
     },
   },
   components: commonComponents,
@@ -122,31 +87,13 @@ export const darkTheme = createTheme({
     mode: 'dark',
     primary: {
       main: '#90caf9',
-      light: '#e3f2fd',
-      dark: '#42a5f5',
     },
     secondary: {
       main: '#f48fb1',
-      light: '#fce4ec',
-      dark: '#f06292',
     },
     background: {
       default: '#121212',
       paper: '#1e1e1e',
-    },
-    text: {
-      primary: '#ffffff',
-      secondary: 'rgba(255, 255, 255, 0.7)',
-    },
-    expense: {
-      main: '#ef5350',
-      light: '#e57373',
-      dark: '#c62828',
-    },
-    income: {
-      main: '#66bb6a',
-      light: '#81c784',
-      dark: '#2e7d32',
     },
   },
   components: commonComponents,

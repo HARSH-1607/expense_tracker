@@ -1,15 +1,9 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Category } from '../../types';
+import { createSlice } from '@reduxjs/toolkit';
+import { CategoriesState, Category } from '../../types';
 import { v4 as uuidv4 } from 'uuid';
 
-interface CategoriesState {
-  items: Category[];
-  status: 'idle' | 'loading' | 'failed';
-  error: string | null;
-}
-
 const initialState: CategoriesState = {
-  items: [
+  categories: [
     {
       id: uuidv4(),
       name: 'Food & Dining',
@@ -35,7 +29,7 @@ const initialState: CategoriesState = {
       color: '#F44336',
     },
   ],
-  status: 'idle',
+  loading: false,
   error: null,
 };
 
@@ -43,29 +37,32 @@ const categoriesSlice = createSlice({
   name: 'categories',
   initialState,
   reducers: {
-    addCategory: (state, action: PayloadAction<Omit<Category, 'id'>>) => {
-      const newCategory: Category = {
-        ...action.payload,
-        id: uuidv4(),
-      };
-      state.items.push(newCategory);
+    addCategory: (state, action: { payload: Category }) => {
+      state.categories.push(action.payload);
     },
-    updateCategory: (state, action: PayloadAction<Category>) => {
-      const index = state.items.findIndex((cat) => cat.id === action.payload.id);
+    updateCategory: (state, action: { payload: { id: string; name: string } }) => {
+      const index = state.categories.findIndex(
+        (category) => category.id === action.payload.id
+      );
       if (index !== -1) {
-        state.items[index] = action.payload;
+        state.categories[index] = {
+          ...state.categories[index],
+          name: action.payload.name,
+        };
       }
     },
-    deleteCategory: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((cat) => cat.id !== action.payload);
+    deleteCategory: (state, action: { payload: string }) => {
+      state.categories = state.categories.filter(
+        (category) => category.id !== action.payload
+      );
     },
-    setCategories: (state, action: PayloadAction<Category[]>) => {
-      state.items = action.payload;
+    setCategories: (state, action: { payload: Category[] }) => {
+      state.categories = action.payload;
     },
-    setCategoriesStatus: (state, action: PayloadAction<'idle' | 'loading' | 'failed'>) => {
-      state.status = action.payload;
+    setCategoriesStatus: (state, action: { payload: 'idle' | 'loading' | 'failed' }) => {
+      state.loading = action.payload === 'loading';
     },
-    setCategoriesError: (state, action: PayloadAction<string | null>) => {
+    setCategoriesError: (state, action: { payload: string | null }) => {
       state.error = action.payload;
     },
   },

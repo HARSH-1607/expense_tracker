@@ -1,8 +1,8 @@
 export interface Category {
   id: string;
   name: string;
-  icon: string;
-  color: string;
+  icon?: string;
+  color?: string;
 }
 
 export interface Expense {
@@ -10,10 +10,7 @@ export interface Expense {
   amount: number;
   categoryId: string;
   date: string;
-  notes?: string;
-  currency: string;
-  isRecurring: boolean;
-  recurringFrequency?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  description: string;
 }
 
 export interface User {
@@ -38,8 +35,8 @@ export interface SavingsGoal {
   name: string;
   targetAmount: number;
   currentAmount: number;
-  deadline?: string;
-  currency: string;
+  targetDate: string;
+  description?: string;
 }
 
 export interface Currency {
@@ -47,6 +44,28 @@ export interface Currency {
   symbol: string;
   name: string;
   exchangeRate: number; // Relative to base currency
+}
+
+export interface CategoriesState {
+  categories: Category[];
+  loading: boolean;
+  error: string | null;
+}
+
+export interface ExpensesState {
+  expenses: Expense[];
+  loading: boolean;
+  error: string | null;
+}
+
+export interface SavingsState {
+  goals: SavingsGoal[];
+  loading: boolean;
+  error: string | null;
+}
+
+export interface ThemeState {
+  darkMode: boolean;
 }
 
 export type ThemeMode = 'light' | 'dark' | 'system';

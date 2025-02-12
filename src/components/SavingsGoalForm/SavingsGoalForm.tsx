@@ -1,121 +1,93 @@
-import React from 'react';
+import { useState } from 'react';
 import {
-  Box,
-  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
-  Grid,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  SelectChangeEvent,
+  TextField,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { SavingsGoal } from '../../types';
 
 interface SavingsGoalFormProps {
+  open: boolean;
+  onClose: () => void;
   onSubmit: (goal: Omit<SavingsGoal, 'id' | 'currentAmount'>) => void;
   initialValues?: SavingsGoal;
-  submitButtonText?: string;
 }
 
-export const SavingsGoalForm: React.FC<SavingsGoalFormProps> = ({
-  onSubmit,
-  initialValues,
-  submitButtonText = 'Add Savings Goal',
-}) => {
-  const [name, setName] = React.useState(initialValues?.name || '');
-  const [targetAmount, setTargetAmount] = React.useState(
-    initialValues?.targetAmount?.toString() || ''
+const SavingsGoalForm = ({ open, onClose, onSubmit, initialValues }: SavingsGoalFormProps) => {
+  const [name, setName] = useState(initialValues?.name || '');
+  const [targetAmount, setTargetAmount] = useState(initialValues?.targetAmount || 0);
+  const [targetDate, setTargetDate] = useState<Date | null>(
+    initialValues?.targetDate ? new Date(initialValues.targetDate) : new Date()
   );
-  const [deadline, setDeadline] = React.useState<Date | null>(
-    initialValues?.deadline ? new Date(initialValues.deadline) : null
-  );
-  const [currency, setCurrency] = React.useState(initialValues?.currency || 'USD');
+  const [description, setDescription] = useState(initialValues?.description || '');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
-      name,
-      targetAmount: parseFloat(targetAmount),
-      deadline: deadline?.toISOString(),
-      currency,
-    });
-  };
-
-  const handleCurrencyChange = (event: SelectChangeEvent) => {
-    setCurrency(event.target.value);
+    if (targetDate) {
+      onSubmit({
+        name,
+        targetAmount,
+        targetDate: targetDate.toISOString(),
+        description,
+      });
+    }
+    onClose();
   };
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <form onSubmit={handleSubmit}>
+        <DialogTitle>{initialValues ? 'Edit Goal' : 'Add Goal'}</DialogTitle>
+        <DialogContent>
           <TextField
-            required
-            fullWidth
+            autoFocus
+            margin="dense"
             label="Goal Name"
+            type="text"
+            fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
             required
-            fullWidth
+          />
+          <TextField
+            margin="dense"
             label="Target Amount"
             type="number"
-            value={targetAmount}
-            onChange={(e) => setTargetAmount(e.target.value)}
-            inputProps={{ step: '0.01', min: '0' }}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth required>
-            <InputLabel>Currency</InputLabel>
-            <Select value={currency} onChange={handleCurrencyChange} label="Currency">
-              <MenuItem value="USD">USD ($)</MenuItem>
-              <MenuItem value="EUR">EUR (€)</MenuItem>
-              <MenuItem value="GBP">GBP (£)</MenuItem>
-              <MenuItem value="INR">INR (₹)</MenuItem>
-              <MenuItem value="JPY">JPY (¥)</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-
-        <Grid item xs={12}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
-              label="Target Date (Optional)"
-              value={deadline}
-              onChange={(newValue) => setDeadline(newValue)}
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                },
-              }}
-              minDate={new Date()}
-            />
-          </LocalizationProvider>
-        </Grid>
-
-        <Grid item xs={12}>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
             fullWidth
-            size="large"
-            sx={{ mt: 2 }}
-          >
-            {submitButtonText}
+            value={targetAmount}
+            onChange={(e) => setTargetAmount(Number(e.target.value))}
+            required
+          />
+          <DatePicker
+            label="Target Date"
+            value={targetDate}
+            onChange={(newDate) => setTargetDate(newDate)}
+            sx={{ width: '100%', mt: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Description"
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" variant="contained" color="primary">
+            {initialValues ? 'Save' : 'Add'}
           </Button>
-        </Grid>
-      </Grid>
-    </Box>
+        </DialogActions>
+      </form>
+    </Dialog>
   );
-}; 
+};
+
+export default SavingsGoalForm; 

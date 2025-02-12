@@ -1,131 +1,207 @@
-import React from 'react';
+import { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Box,
   Typography,
-  Paper,
-  FormControl,
-  InputLabel,
+  Switch,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
   Select,
   MenuItem,
-  FormControlLabel,
-  Switch,
-  Grid,
   SelectChangeEvent,
-  useTheme,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../features/store';
-import {
-  updateUserPreferences,
-  updateNotificationPreferences,
-} from '../../features/user/userSlice';
-import { setThemeMode } from '../../features/theme/themeSlice';
-import { ThemeMode } from '../../types';
+import { RootState } from '../../store';
+import { toggleTheme } from '../../features/theme/themeSlice';
+import { updateSettings, updateNotifications } from '../../features/settings/settingsSlice';
 
 const Settings = () => {
-  const theme = useTheme();
   const dispatch = useDispatch();
-  const user = useSelector((state: RootState) => state.user.currentUser);
+  const isDarkMode = useSelector((state: RootState) => state.theme.darkMode);
+  const settings = useSelector((state: RootState) => state.settings);
+  const [isBackupDialogOpen, setIsBackupDialogOpen] = useState(false);
+  const [backupEmail, setBackupEmail] = useState('');
 
-  const handleThemeChange = (event: SelectChangeEvent) => {
-    const newTheme = event.target.value as ThemeMode;
-    dispatch(updateUserPreferences({ theme: newTheme }));
-    dispatch(setThemeMode(newTheme));
+  const handleThemeToggle = () => {
+    dispatch(toggleTheme());
   };
 
   const handleCurrencyChange = (event: SelectChangeEvent) => {
-    dispatch(updateUserPreferences({ defaultCurrency: event.target.value }));
+    dispatch(updateSettings({ currency: event.target.value }));
   };
 
-  const handleNotificationChange = (setting: keyof typeof user.preferences.notifications) => {
-    return (event: React.ChangeEvent<HTMLInputElement>) => {
-      dispatch(
-        updateNotificationPreferences({
-          [setting]: event.target.checked,
-        })
-      );
-    };
+  const handleLanguageChange = (event: SelectChangeEvent) => {
+    dispatch(updateSettings({ language: event.target.value }));
+  };
+
+  const handleNotificationChange = (type: keyof typeof settings.notifications) => {
+    dispatch(updateNotifications({
+      [type]: !settings.notifications[type],
+    }));
+  };
+
+  const handleBackupDialogOpen = () => {
+    setIsBackupDialogOpen(true);
+  };
+
+  const handleBackupDialogClose = () => {
+    setIsBackupDialogOpen(false);
+  };
+
+  const handleBackupRequest = () => {
+    // Here you would typically make an API call to request the backup
+    dispatch(updateSettings({ backupEmail }));
+    setIsBackupDialogOpen(false);
   };
 
   return (
-    <Box>
-      <Typography variant="h4" sx={{ mb: 4 }}>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h4" gutterBottom>
         Settings
       </Typography>
 
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" sx={{ mb: 3 }}>
-          Appearance
-        </Typography>
-        <FormControl fullWidth sx={{ mb: 3 }}>
-          <InputLabel>Theme</InputLabel>
-          <Select
-            value={user?.preferences.theme || 'system'}
-            onChange={handleThemeChange}
-            label="Theme"
-          >
-            <MenuItem value="light">Light</MenuItem>
-            <MenuItem value="dark">Dark</MenuItem>
-            <MenuItem value="system">System</MenuItem>
-          </Select>
-        </FormControl>
+      <List>
+        <ListItem>
+          <ListItemText
+            primary="Dark Mode"
+            secondary="Toggle between light and dark theme"
+          />
+          <ListItemSecondaryAction>
+            <Switch
+              edge="end"
+              checked={isDarkMode}
+              onChange={handleThemeToggle}
+            />
+          </ListItemSecondaryAction>
+        </ListItem>
 
-        <FormControl fullWidth>
-          <InputLabel>Default Currency</InputLabel>
-          <Select
-            value={user?.preferences.defaultCurrency || 'USD'}
-            onChange={handleCurrencyChange}
-            label="Default Currency"
-          >
-            <MenuItem value="USD">USD ($)</MenuItem>
-            <MenuItem value="EUR">EUR (€)</MenuItem>
-            <MenuItem value="GBP">GBP (£)</MenuItem>
-            <MenuItem value="INR">INR (₹)</MenuItem>
-            <MenuItem value="JPY">JPY (¥)</MenuItem>
-          </Select>
-        </FormControl>
-      </Paper>
+        <ListItem>
+          <ListItemText
+            primary="Currency"
+            secondary="Select your preferred currency"
+          />
+          <ListItemSecondaryAction>
+            <Select
+              value={settings.currency}
+              onChange={handleCurrencyChange}
+              size="small"
+              sx={{ minWidth: 120 }}
+            >
+              <MenuItem value="USD">USD ($)</MenuItem>
+              <MenuItem value="EUR">EUR (€)</MenuItem>
+              <MenuItem value="GBP">GBP (£)</MenuItem>
+              <MenuItem value="JPY">JPY (¥)</MenuItem>
+            </Select>
+          </ListItemSecondaryAction>
+        </ListItem>
 
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" sx={{ mb: 3 }}>
-          Notifications
-        </Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={user?.preferences.notifications.billReminders}
-                  onChange={handleNotificationChange('billReminders')}
-                />
-              }
-              label="Bill Reminders"
+        <ListItem>
+          <ListItemText
+            primary="Language"
+            secondary="Select your preferred language"
+          />
+          <ListItemSecondaryAction>
+            <Select
+              value={settings.language}
+              onChange={handleLanguageChange}
+              size="small"
+              sx={{ minWidth: 120 }}
+            >
+              <MenuItem value="en">English</MenuItem>
+              <MenuItem value="es">Español</MenuItem>
+              <MenuItem value="fr">Français</MenuItem>
+              <MenuItem value="de">Deutsch</MenuItem>
+            </Select>
+          </ListItemSecondaryAction>
+        </ListItem>
+
+        <ListItem>
+          <ListItemText
+            primary="Email Notifications"
+            secondary="Receive updates via email"
+          />
+          <ListItemSecondaryAction>
+            <Switch
+              edge="end"
+              checked={settings.notifications.email}
+              onChange={() => handleNotificationChange('email')}
             />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={user?.preferences.notifications.budgetAlerts}
-                  onChange={handleNotificationChange('budgetAlerts')}
-                />
-              }
-              label="Budget Alerts"
+          </ListItemSecondaryAction>
+        </ListItem>
+
+        <ListItem>
+          <ListItemText
+            primary="Push Notifications"
+            secondary="Receive push notifications"
+          />
+          <ListItemSecondaryAction>
+            <Switch
+              edge="end"
+              checked={settings.notifications.push}
+              onChange={() => handleNotificationChange('push')}
             />
-          </Grid>
-          <Grid item xs={12}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={user?.preferences.notifications.goalProgress}
-                  onChange={handleNotificationChange('goalProgress')}
-                />
-              }
-              label="Goal Progress Updates"
+          </ListItemSecondaryAction>
+        </ListItem>
+
+        <ListItem>
+          <ListItemText
+            primary="Bill Reminders"
+            secondary="Get reminders for upcoming bills"
+          />
+          <ListItemSecondaryAction>
+            <Switch
+              edge="end"
+              checked={settings.notifications.billReminders}
+              onChange={() => handleNotificationChange('billReminders')}
             />
-          </Grid>
-        </Grid>
-      </Paper>
+          </ListItemSecondaryAction>
+        </ListItem>
+
+        <ListItem>
+          <ListItemText
+            primary="Data Backup"
+            secondary="Request a backup of your data"
+          />
+          <ListItemSecondaryAction>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={handleBackupDialogOpen}
+            >
+              Request Backup
+            </Button>
+          </ListItemSecondaryAction>
+        </ListItem>
+      </List>
+
+      <Dialog open={isBackupDialogOpen} onClose={handleBackupDialogClose}>
+        <DialogTitle>Request Data Backup</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2 }}>
+            Enter your email address to receive a backup of your data.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Email Address"
+            type="email"
+            value={backupEmail}
+            onChange={(e) => setBackupEmail(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleBackupDialogClose}>Cancel</Button>
+          <Button onClick={handleBackupRequest} variant="contained">
+            Request Backup
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -1,73 +1,41 @@
-import React, { useRef } from 'react';
+import React, { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Box,
   Typography,
-  Paper,
-  Avatar,
-  Button,
-  Grid,
   TextField,
-  useTheme,
+  Button,
+  Avatar,
+  Paper,
+  Grid,
   IconButton,
-  Divider,
-  Switch,
-  FormControlLabel,
-  Snackbar,
-  Alert,
-  CircularProgress,
-  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../features/store';
-import { updateUser, updateUserPreferences } from '../../features/user/userSlice';
-import { setThemeMode } from '../../features/theme/themeSlice';
 import {
-  PhotoCamera,
   Edit as EditIcon,
+  PhotoCamera as PhotoCameraIcon,
   Save as SaveIcon,
   Cancel as CancelIcon,
-  Delete as DeleteIcon,
-  Palette as PaletteIcon,
 } from '@mui/icons-material';
+import { RootState } from '../../store';
+import { updateProfile } from '../../features/user/userSlice';
 
 const Profile = () => {
-  const theme = useTheme();
   const dispatch = useDispatch();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const user = useSelector((state: RootState) => state.user.currentUser);
-  const currentTheme = useSelector((state: RootState) => state.theme.mode);
-  
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [message, setMessage] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [formData, setFormData] = React.useState({
+  const user = useSelector((state: RootState) => state.user.user);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    bio: user?.bio || '',
+    phone: user?.phone || '',
+    occupation: user?.occupation || '',
   });
-
-  const handleEditToggle = () => {
-    if (isEditing) {
-      handleSaveChanges();
-    }
-    setIsEditing(!isEditing);
-  };
-
-  const handleSaveChanges = () => {
-    try {
-      // Validate email format
-      if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-        setMessage({ type: 'error', text: 'Please enter a valid email address' });
-        return;
-      }
-
-      dispatch(updateUser(formData));
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-      setIsEditing(false);
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -77,252 +45,194 @@ const Profile = () => {
     }));
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleEditClick = () => {
+    setIsEditing(true);
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      occupation: user?.occupation || '',
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setError(null);
+  };
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const handleSaveClick = () => {
+    if (!validateEmail(formData.email)) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    dispatch(updateProfile(formData));
+    setIsEditing(false);
+    setError(null);
+  };
+
+  const handleAvatarClick = () => {
+    setIsAvatarDialogOpen(true);
+  };
+
+  const handleAvatarDialogClose = () => {
+    setIsAvatarDialogOpen(false);
+  };
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
-      setLoading(true);
-      try {
-        // Convert image to base64 for storage
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          dispatch(updateUser({ profilePhoto: reader.result as string }));
-          setMessage({ type: 'success', text: 'Profile photo updated successfully!' });
-          setLoading(false);
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        setMessage({ type: 'error', text: 'Failed to update profile photo. Please try again.' });
-        setLoading(false);
-      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        dispatch(updateProfile({ avatarUrl: reader.result as string }));
+        setIsAvatarDialogOpen(false);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleRemovePhoto = () => {
-    dispatch(updateUser({ profilePhoto: undefined }));
-    setMessage({ type: 'success', text: 'Profile photo removed successfully!' });
-  };
-
-  const handleThemeToggle = () => {
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    dispatch(setThemeMode(newTheme));
-    dispatch(updateUserPreferences({ theme: newTheme }));
-    setMessage({ type: 'success', text: `${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} mode activated` });
-  };
-
   return (
-    <Box>
-      <Typography variant="h4" sx={{ mb: 4 }}>
-        Profile
-      </Typography>
-
-      <Paper sx={{ p: 3, mb: 3, transition: 'all 0.3s ease-in-out' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <Box sx={{ position: 'relative' }}>
-            <Avatar
-              src={user?.profilePhoto}
-              sx={{
-                width: 120,
-                height: 120,
-                bgcolor: theme.palette.primary.main,
-                transition: 'all 0.3s ease-in-out',
-              }}
-            >
-              {!user?.profilePhoto && user?.name?.charAt(0)}
-            </Avatar>
-            {loading && (
-              <CircularProgress
-                size={30}
+    <Box sx={{ p: 3 }}>
+      <Paper elevation={3} sx={{ p: 3 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={4} sx={{ textAlign: 'center' }}>
+            <Box sx={{ position: 'relative', display: 'inline-block' }}>
+              <Avatar
+                src={user?.avatarUrl}
+                sx={{
+                  width: 150,
+                  height: 150,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    opacity: 0.8,
+                  },
+                }}
+                onClick={handleAvatarClick}
+              />
+              <IconButton
                 sx={{
                   position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  marginTop: '-15px',
-                  marginLeft: '-15px',
+                  bottom: 0,
+                  right: 0,
+                  backgroundColor: 'primary.main',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark',
+                  },
                 }}
-              />
+                onClick={handleAvatarClick}
+              >
+                <PhotoCameraIcon />
+              </IconButton>
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={8}>
+            {isEditing ? (
+              <Box component="form" sx={{ '& .MuiTextField-root': { my: 1 } }}>
+                <TextField
+                  fullWidth
+                  label="Name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  fullWidth
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  error={!!error}
+                  helperText={error}
+                />
+                <TextField
+                  fullWidth
+                  label="Phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                />
+                <TextField
+                  fullWidth
+                  label="Occupation"
+                  name="occupation"
+                  value={formData.occupation}
+                  onChange={handleInputChange}
+                />
+                <Box sx={{ mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    onClick={handleSaveClick}
+                    sx={{ mr: 1 }}
+                  >
+                    Save
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<CancelIcon />}
+                    onClick={handleCancelEdit}
+                  >
+                    Cancel
+                  </Button>
+                </Box>
+              </Box>
+            ) : (
+              <Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Typography variant="h5">Profile Information</Typography>
+                  <IconButton onClick={handleEditClick} color="primary">
+                    <EditIcon />
+                  </IconButton>
+                </Box>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <strong>Name:</strong> {user?.name}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <strong>Email:</strong> {user?.email}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <strong>Phone:</strong> {user?.phone || 'Not provided'}
+                </Typography>
+                <Typography variant="body1" sx={{ mb: 1 }}>
+                  <strong>Occupation:</strong> {user?.occupation || 'Not provided'}
+                </Typography>
+              </Box>
             )}
-          </Box>
-          <Box sx={{ ml: 3 }}>
-            <Typography variant="h5" sx={{ mb: 1 }}>
-              {user?.name}
-            </Typography>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      <Dialog open={isAvatarDialogOpen} onClose={handleAvatarDialogClose}>
+        <DialogTitle>Update Profile Picture</DialogTitle>
+        <DialogContent>
+          <Box sx={{ textAlign: 'center', my: 2 }}>
+            <Avatar
+              src={user?.avatarUrl}
+              sx={{ width: 150, height: 150, mx: 'auto', mb: 2 }}
+            />
             <input
-              type="file"
-              ref={fileInputRef}
               accept="image/*"
               style={{ display: 'none' }}
-              onChange={handlePhotoUpload}
+              id="avatar-upload"
+              type="file"
+              onChange={handleAvatarUpload}
             />
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button
-                variant="outlined"
-                startIcon={<PhotoCamera />}
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading}
-                size="small"
-              >
-                Change Photo
+            <label htmlFor="avatar-upload">
+              <Button variant="contained" component="span">
+                Choose New Picture
               </Button>
-              {user?.profilePhoto && (
-                <Tooltip title="Remove photo">
-                  <IconButton
-                    onClick={handleRemovePhoto}
-                    disabled={loading}
-                    size="small"
-                    color="error"
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
+            </label>
           </Box>
-        </Box>
-
-        <Divider sx={{ my: 3 }} />
-
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              disabled={!isEditing}
-              error={isEditing && !formData.name}
-              helperText={isEditing && !formData.name ? 'Name is required' : ''}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              disabled={!isEditing}
-              error={isEditing && (!formData.email || !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))}
-              helperText={
-                isEditing && (!formData.email || !formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
-                  ? 'Please enter a valid email address'
-                  : ''
-              }
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Bio"
-              name="bio"
-              multiline
-              rows={4}
-              value={formData.bio}
-              onChange={handleInputChange}
-              disabled={!isEditing}
-              inputProps={{ maxLength: 500 }}
-              helperText={`${formData.bio.length}/500 characters`}
-            />
-          </Grid>
-        </Grid>
-
-        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-          {isEditing ? (
-            <>
-              <Button
-                variant="outlined"
-                color="error"
-                startIcon={<CancelIcon />}
-                onClick={() => setIsEditing(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="contained"
-                color="primary"
-                startIcon={<SaveIcon />}
-                onClick={handleSaveChanges}
-              >
-                Save Changes
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="contained"
-              color="primary"
-              startIcon={<EditIcon />}
-              onClick={handleEditToggle}
-            >
-              Edit Profile
-            </Button>
-          )}
-        </Box>
-      </Paper>
-
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" sx={{ mb: 3 }}>
-          Preferences
-        </Typography>
-        
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <PaletteIcon sx={{ mr: 2, color: theme.palette.primary.main }} />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={currentTheme === 'dark'}
-                onChange={handleThemeToggle}
-                color="primary"
-              />
-            }
-            label={`${currentTheme === 'dark' ? 'Dark' : 'Light'} Mode`}
-          />
-        </Box>
-
-        <Divider sx={{ my: 3 }} />
-
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Account Statistics
-        </Typography>
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={4}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Member Since
-            </Typography>
-            <Typography variant="h6">
-              {new Date().toLocaleDateString()}
-            </Typography>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Total Transactions
-            </Typography>
-            <Typography variant="h6">0</Typography>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Typography variant="subtitle2" color="text.secondary">
-              Active Goals
-            </Typography>
-            <Typography variant="h6">0</Typography>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      <Snackbar
-        open={!!message}
-        autoHideDuration={6000}
-        onClose={() => setMessage(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setMessage(null)}
-          severity={message?.type}
-          sx={{ width: '100%' }}
-          variant="filled"
-        >
-          {message?.text}
-        </Alert>
-      </Snackbar>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleAvatarDialogClose}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

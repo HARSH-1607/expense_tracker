@@ -1,57 +1,52 @@
-import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
-import { Provider } from 'react-redux';
+import CssBaseline from '@mui/material/CssBaseline';
+import { useSelector } from 'react-redux';
+import { RootState } from './store';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { useSelector } from 'react-redux';
-import { store } from './features/store';
-import { selectUserPreferences } from './features/user/userSlice';
-import { lightTheme, darkTheme } from './theme';
 
-// Components
-import { Layout } from './components/Layout/Layout';
-
-// Pages
+import Layout from './components/Layout/Layout';
 import Dashboard from './pages/Dashboard/Dashboard';
-import Categories from './pages/Categories/Categories';
 import Transactions from './pages/Transactions/Transactions';
+import Categories from './pages/Categories/Categories';
 import SavingsGoals from './pages/SavingsGoals/SavingsGoals';
 import Reports from './pages/Reports/Reports';
+import Settings from './pages/Settings/Settings';
 import Profile from './pages/Profile/Profile';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import ProtectedRoute from './components/ProtectedRoute';
 
-const AppContent = () => {
-  const userPreferences = useSelector(selectUserPreferences);
-  const prefersDarkMode = userPreferences?.theme === 'dark' || 
-    (userPreferences?.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-  return (
-    <ThemeProvider theme={prefersDarkMode ? darkTheme : lightTheme}>
-      <CssBaseline />
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="transactions" element={<Transactions />} />
-          <Route path="savings-goals" element={<SavingsGoals />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="profile" element={<Profile />} />
-        </Route>
-      </Routes>
-    </ThemeProvider>
-  );
-};
+import { lightTheme, darkTheme } from './theme/theme';
 
 const App = () => {
+  const isDarkMode = useSelector((state: RootState) => state.theme.darkMode);
+
   return (
-    <Provider store={store}>
+    <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
+        <CssBaseline />
         <Router>
-          <AppContent />
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/register" element={<Register />} />
+            
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/savings" element={<SavingsGoals />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/profile" element={<Profile />} />
+            </Route>
+          </Routes>
         </Router>
       </LocalizationProvider>
-    </Provider>
+    </ThemeProvider>
   );
 };
 

@@ -1,24 +1,25 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ThemeMode } from '../../types';
+import { createSlice } from '@reduxjs/toolkit';
 
-interface ThemeState {
-  mode: ThemeMode;
+export interface ThemeState {
+  darkMode: boolean;
 }
 
 const initialState: ThemeState = {
-  mode: 'system',
+  darkMode: false,
 };
 
 const themeSlice = createSlice({
   name: 'theme',
   initialState,
   reducers: {
-    setThemeMode: (state, action: PayloadAction<ThemeMode>) => {
-      state.mode = action.payload;
+    toggleTheme: (state) => {
+      state.darkMode = !state.darkMode;
+    },
+    setDarkMode: (state, action: { payload: boolean }) => {
+      state.darkMode = action.payload;
     },
   },
 });
 
-export const { setThemeMode } = themeSlice.actions;
-
+export const { toggleTheme, setDarkMode } = themeSlice.actions;
 export default themeSlice.reducer; 

@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/expense_tracker/',
+  base: '/expense-tracker/',
   optimizeDeps: {
     exclude: ['react-chartjs-2'],
     include: [
@@ -26,6 +26,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    assetsDir: 'assets',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -35,5 +36,13 @@ export default defineConfig({
         }
       }
     }
+  },
+  server: {
+    port: 5174,
+    strictPort: true,
+  },
+  preview: {
+    port: 5174,
+    strictPort: true,
   }
 }) 

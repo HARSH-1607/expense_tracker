@@ -1,46 +1,33 @@
-import React from 'react';
+import { useState } from 'react';
 import {
   Card,
   CardContent,
   Typography,
   IconButton,
   Box,
-  Chip,
   Menu,
   MenuItem,
-  useTheme,
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Repeat as RepeatIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
 import { useSelector } from 'react-redux';
-import { RootState } from '../../features/store';
-import { Expense } from '../../types';
-import * as Icons from '@mui/icons-material';
+import { RootState } from '../../store';
+import { Expense, Category } from '../../types';
 
 interface ExpenseCardProps {
   expense: Expense;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  onEdit: (expense: Expense) => void;
+  onDelete: (id: string) => void;
 }
 
-const currencySymbols: { [key: string]: string } = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  INR: '₹',
-  JPY: '¥',
-};
-
-export const ExpenseCard: React.FC<ExpenseCardProps> = ({ expense, onEdit, onDelete }) => {
-  const theme = useTheme();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const categories = useSelector((state: RootState) => state.categories.items);
-  const category = categories.find((cat) => cat.id === expense.categoryId);
+const ExpenseCard = ({ expense, onEdit, onDelete }: ExpenseCardProps) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const categories = useSelector((state: RootState) => state.categories.categories);
+  const category = categories.find((cat: Category) => cat.id === expense.categoryId);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -50,121 +37,58 @@ export const ExpenseCard: React.FC<ExpenseCardProps> = ({ expense, onEdit, onDel
     setAnchorEl(null);
   };
 
-  const handleEdit = () => {
+  const handleEditClick = () => {
     handleMenuClose();
-    onEdit?.();
+    onEdit(expense);
   };
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
     handleMenuClose();
-    onDelete?.();
+    onDelete(expense.id);
   };
-
-  // Dynamically get the icon component for the category
-  const IconComponent = category?.icon
-    ? Icons[category.icon as keyof typeof Icons]
-    : Icons.Receipt;
 
   return (
-    <Card
-      sx={{
-        mb: 2,
-        '&:hover': {
-          boxShadow: theme.shadows[4],
-          transform: 'translateY(-2px)',
-          transition: 'all 0.3s ease-in-out',
-        },
-      }}
-    >
+    <Card>
       <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <IconButton
-              sx={{
-                backgroundColor: category?.color || theme.palette.grey[300],
-                color: theme.palette.common.white,
-                '&:hover': {
-                  backgroundColor: category?.color || theme.palette.grey[300],
-                },
-              }}
-              size="small"
-            >
-              {IconComponent && <IconComponent />}
-            </IconButton>
-            <Box>
-              <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'medium' }}>
-                {category?.name || 'Uncategorized'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {format(new Date(expense.date), 'MMM dd, yyyy')}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{ mr: 1, color: theme.palette.expense.main }}
-            >
-              {currencySymbols[expense.currency] || expense.currency}
-              {expense.amount.toFixed(2)}
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography variant="h6" component="div">
+              {expense.description}
             </Typography>
-            <IconButton
-              aria-label="expense actions"
-              onClick={handleMenuClick}
-              size="small"
-            >
+            <Typography color="textSecondary" gutterBottom>
+              {category?.name || 'Uncategorized'}
+            </Typography>
+            <Typography variant="body2" color="textSecondary">
+              {format(new Date(expense.date), 'MMM dd, yyyy')}
+            </Typography>
+          </Box>
+          <Box display="flex" alignItems="center">
+            <Typography variant="h6" component="div" sx={{ mr: 1 }}>
+              ${expense.amount.toFixed(2)}
+            </Typography>
+            <IconButton onClick={handleMenuClick}>
               <MoreVertIcon />
             </IconButton>
           </Box>
-        </Box>
-
-        {expense.notes && (
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mt: 1, whiteSpace: 'pre-wrap' }}
-          >
-            {expense.notes}
-          </Typography>
-        )}
-
-        <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-          {expense.isRecurring && (
-            <Chip
-              icon={<RepeatIcon />}
-              label={`Recurring ${expense.recurringFrequency}`}
-              size="small"
-              color="primary"
-              variant="outlined"
-            />
-          )}
         </Box>
 
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'right',
-          }}
-          transformOrigin={{
-            vertical: 'top',
-            horizontal: 'right',
-          }}
         >
-          <MenuItem onClick={handleEdit}>
-            <EditIcon sx={{ mr: 1 }} fontSize="small" />
+          <MenuItem onClick={handleEditClick}>
+            <EditIcon sx={{ mr: 1 }} />
             Edit
           </MenuItem>
-          <MenuItem onClick={handleDelete} sx={{ color: theme.palette.error.main }}>
-            <DeleteIcon sx={{ mr: 1 }} fontSize="small" />
+          <MenuItem onClick={handleDeleteClick}>
+            <DeleteIcon sx={{ mr: 1 }} />
             Delete
           </MenuItem>
         </Menu>
       </CardContent>
     </Card>
   );
-}; 
+};
+
+export default ExpenseCard; 

@@ -1,53 +1,41 @@
-import { createTheme, Theme } from '@mui/material/styles';
+import { createTheme, Components, Theme } from '@mui/material/styles';
+import { CssVarsTheme } from '@mui/material/styles';
 
 declare module '@mui/material/styles' {
   interface Palette {
-    expense: {
-      main: string;
-      light: string;
-      dark: string;
-    };
-    income: {
-      main: string;
-      light: string;
-      dark: string;
-    };
+    expense: Palette['primary'];
+    income: Palette['primary'];
   }
   interface PaletteOptions {
-    expense?: {
-      main: string;
-      light: string;
-      dark: string;
-    };
-    income?: {
-      main: string;
-      light: string;
-      dark: string;
-    };
+    expense?: PaletteOptions['primary'];
+    income?: PaletteOptions['primary'];
   }
 }
 
-const commonComponents = {
+const commonComponents: Components<Omit<Theme, "components" | "palette"> & CssVarsTheme> = {
   MuiCssBaseline: {
     styleOverrides: {
       body: {
-        transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
+        transition: 'background-color 0.2s ease',
       },
     },
   },
   MuiPaper: {
     styleOverrides: {
       root: {
-        transition: 'background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
+        transition: 'background-color 0.2s ease',
       },
     },
   },
   MuiButton: {
+    defaultProps: {
+      disableElevation: true,
+    },
     styleOverrides: {
       root: {
-        textTransform: 'none',
         borderRadius: 8,
-        transition: 'all 0.3s ease-in-out',
+        textTransform: 'none',
+        fontWeight: 600,
       },
     },
   },
@@ -56,39 +44,31 @@ const commonComponents = {
       root: {
         borderRadius: 12,
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        transition: 'all 0.3s ease-in-out',
       },
     },
   },
   MuiSwitch: {
     styleOverrides: {
       root: {
-        padding: 8,
+        width: 42,
+        height: 26,
+        padding: 0,
       },
-      track: {
-        borderRadius: 22 / 2,
-        '&:before, &:after': {
-          content: '""',
-          position: 'absolute',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: 16,
-          height: 16,
+      switchBase: {
+        padding: 1,
+        '&.Mui-checked': {
+          transform: 'translateX(16px)',
+          color: '#fff',
         },
       },
       thumb: {
-        width: 20,
-        height: 20,
-        '&:before': {
-          content: '""',
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          left: 0,
-          top: 0,
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-        },
+        width: 24,
+        height: 24,
+      },
+      track: {
+        borderRadius: 13,
+        border: '1px solid #bdbdbd',
+        opacity: 1,
       },
     },
   },
@@ -103,9 +83,9 @@ export const lightTheme = createTheme({
       dark: '#1976d2',
     },
     secondary: {
-      main: '#ff4081',
-      light: '#ff79b0',
-      dark: '#c60055',
+      main: '#f50057',
+      light: '#ff4081',
+      dark: '#c51162',
     },
     expense: {
       main: '#f44336',
@@ -161,13 +141,13 @@ export const darkTheme = createTheme({
     mode: 'dark',
     primary: {
       main: '#90caf9',
-      light: '#c3fdff',
-      dark: '#5d99c6',
+      light: '#e3f2fd',
+      dark: '#42a5f5',
     },
     secondary: {
       main: '#f48fb1',
-      light: '#ffc1e3',
-      dark: '#bf5f82',
+      light: '#fce4ec',
+      dark: '#f06292',
     },
     expense: {
       main: '#ef5350',
@@ -189,15 +169,5 @@ export const darkTheme = createTheme({
     },
   },
   typography: lightTheme.typography,
-  components: {
-    ...commonComponents,
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: 'none',
-          transition: 'background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-        },
-      },
-    },
-  },
+  components: commonComponents,
 }); 

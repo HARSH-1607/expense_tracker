@@ -8,40 +8,44 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    concurrency: ci-${{ github.ref }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '18.x'
           cache: 'npm'
 
-      - name: Clean install dependencies
-        run: |
-          rm -f package-lock.json
-          npm install
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build
         run: npm run build
         env:
           NODE_ENV: production
-          PUBLIC_URL: /expense_tracker
+          VITE_BASE_URL: /expense_tracker
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
-      - name: Add .nojekyll file
-        run: touch ./dist/.nojekyll
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: dist
-          branch: gh-pages
-          clean: true
-          single-commit: true 
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 

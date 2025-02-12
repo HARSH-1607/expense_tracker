@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -18,26 +18,18 @@ import {
   Flag as FlagIcon,
   CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
-import { format, isAfter, isBefore } from 'date-fns';
+import { format } from 'date-fns';
 import { SavingsGoal } from '../../types';
 
 interface SavingsGoalCardProps {
   goal: SavingsGoal;
-  onEdit?: () => void;
-  onDelete?: () => void;
+  onEdit: (goal: SavingsGoal) => void;
+  onDelete: (id: string) => void;
 }
 
-const currencySymbols: { [key: string]: string } = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  INR: '₹',
-  JPY: '¥',
-};
-
-export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({ goal, onEdit, onDelete }) => {
+const SavingsGoalCard = ({ goal, onEdit, onDelete }: SavingsGoalCardProps) => {
   const theme = useTheme();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -47,24 +39,21 @@ export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({ goal, onEdit, 
     setAnchorEl(null);
   };
 
-  const handleEdit = () => {
+  const handleEditClick = () => {
     handleMenuClose();
-    onEdit?.();
+    onEdit(goal);
   };
 
-  const handleDelete = () => {
+  const handleDeleteClick = () => {
     handleMenuClose();
-    onDelete?.();
+    onDelete(goal.id);
   };
 
   const progress = (goal.currentAmount / goal.targetAmount) * 100;
   const isCompleted = goal.currentAmount >= goal.targetAmount;
-  const isOverdue =
-    goal.deadline && isBefore(new Date(goal.deadline), new Date()) && !isCompleted;
 
   const getStatusColor = () => {
     if (isCompleted) return theme.palette.success.main;
-    if (isOverdue) return theme.palette.error.main;
     if (progress >= 75) return theme.palette.success.main;
     if (progress >= 50) return theme.palette.warning.main;
     return theme.palette.primary.main;
@@ -101,26 +90,22 @@ export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({ goal, onEdit, 
               <Typography variant="subtitle1" component="div" sx={{ fontWeight: 'medium' }}>
                 {goal.name}
               </Typography>
-              {goal.deadline && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <CalendarIcon fontSize="small" color="action" />
-                  <Typography variant="body2" color="text.secondary">
-                    {format(new Date(goal.deadline), 'MMM dd, yyyy')}
-                  </Typography>
-                </Box>
-              )}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <CalendarIcon fontSize="small" color="action" />
+                <Typography variant="body2" color="text.secondary">
+                  {format(new Date(goal.targetDate), 'MMM dd, yyyy')}
+                </Typography>
+              </Box>
             </Box>
           </Box>
 
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Box sx={{ textAlign: 'right', mr: 1 }}>
               <Typography variant="h6" component="div" color="primary">
-                {currencySymbols[goal.currency] || goal.currency}
-                {goal.currentAmount.toFixed(2)}
+                ${goal.currentAmount.toFixed(2)}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                of {currencySymbols[goal.currency] || goal.currency}
-                {goal.targetAmount.toFixed(2)}
+                of ${goal.targetAmount.toFixed(2)}
               </Typography>
             </Box>
             <IconButton
@@ -172,11 +157,11 @@ export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({ goal, onEdit, 
             horizontal: 'right',
           }}
         >
-          <MenuItem onClick={handleEdit}>
+          <MenuItem onClick={handleEditClick}>
             <EditIcon sx={{ mr: 1 }} fontSize="small" />
             Edit
           </MenuItem>
-          <MenuItem onClick={handleDelete} sx={{ color: theme.palette.error.main }}>
+          <MenuItem onClick={handleDeleteClick} sx={{ color: theme.palette.error.main }}>
             <DeleteIcon sx={{ mr: 1 }} fontSize="small" />
             Delete
           </MenuItem>
@@ -184,4 +169,6 @@ export const SavingsGoalCard: React.FC<SavingsGoalCardProps> = ({ goal, onEdit, 
       </CardContent>
     </Card>
   );
-}; 
+};
+
+export default SavingsGoalCard; 

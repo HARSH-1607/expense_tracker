@@ -1,28 +1,31 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Expense } from '../../types';
-import { v4 as uuidv4 } from 'uuid';
+
+interface ExpensesFilters {
+  searchTerm: string;
+  category: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  minAmount: number | null;
+  maxAmount: number | null;
+}
 
 interface ExpensesState {
-  items: Expense[];
-  status: 'idle' | 'loading' | 'failed';
+  expenses: Expense[];
+  loading: boolean;
   error: string | null;
-  filters: {
-    startDate: string | null;
-    endDate: string | null;
-    categoryId: string | null;
-    minAmount: number | null;
-    maxAmount: number | null;
-  };
+  filters: ExpensesFilters;
 }
 
 const initialState: ExpensesState = {
-  items: [],
-  status: 'idle',
+  expenses: [],
+  loading: false,
   error: null,
   filters: {
+    searchTerm: '',
+    category: null,
     startDate: null,
     endDate: null,
-    categoryId: null,
     minAmount: null,
     maxAmount: null,
   },
@@ -32,32 +35,22 @@ const expensesSlice = createSlice({
   name: 'expenses',
   initialState,
   reducers: {
-    addExpense: (state, action: PayloadAction<Omit<Expense, 'id'>>) => {
-      const newExpense: Expense = {
-        ...action.payload,
-        id: uuidv4(),
-      };
-      state.items.push(newExpense);
+    addExpense: (state, action: PayloadAction<Expense>) => {
+      state.expenses.push(action.payload);
     },
     updateExpense: (state, action: PayloadAction<Expense>) => {
-      const index = state.items.findIndex((exp) => exp.id === action.payload.id);
+      const index = state.expenses.findIndex((expense) => expense.id === action.payload.id);
       if (index !== -1) {
-        state.items[index] = action.payload;
+        state.expenses[index] = action.payload;
       }
     },
     deleteExpense: (state, action: PayloadAction<string>) => {
-      state.items = state.items.filter((exp) => exp.id !== action.payload);
+      state.expenses = state.expenses.filter((expense) => expense.id !== action.payload);
     },
     setExpenses: (state, action: PayloadAction<Expense[]>) => {
-      state.items = action.payload;
+      state.expenses = action.payload;
     },
-    setExpensesStatus: (state, action: PayloadAction<'idle' | 'loading' | 'failed'>) => {
-      state.status = action.payload;
-    },
-    setExpensesError: (state, action: PayloadAction<string | null>) => {
-      state.error = action.payload;
-    },
-    setExpensesFilters: (state, action: PayloadAction<Partial<ExpensesState['filters']>>) => {
+    setExpensesFilters: (state, action: PayloadAction<Partial<ExpensesFilters>>) => {
       state.filters = {
         ...state.filters,
         ...action.payload,
@@ -65,6 +58,12 @@ const expensesSlice = createSlice({
     },
     clearExpensesFilters: (state) => {
       state.filters = initialState.filters;
+    },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
+    },
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
     },
   },
 });
@@ -74,10 +73,10 @@ export const {
   updateExpense,
   deleteExpense,
   setExpenses,
-  setExpensesStatus,
-  setExpensesError,
   setExpensesFilters,
   clearExpensesFilters,
+  setLoading,
+  setError,
 } = expensesSlice.actions;
 
 export default expensesSlice.reducer; 

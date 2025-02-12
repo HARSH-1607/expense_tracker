@@ -21,7 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { updateUser } from '../../features/user/userSlice';
+import { setUser } from '../../features/user/userSlice';
 
 const Login = () => {
   const theme = useTheme();
@@ -44,39 +44,28 @@ const Login = () => {
     }));
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     try {
-      // Here you would typically make an API call to authenticate the user
-      // For now, we'll simulate a successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Simulate successful login
-      dispatch(
-        updateUser({
-          id: '1',
-          name: 'Demo User',
-          email: formData.email,
-          preferences: {
-            theme: 'system',
-            defaultCurrency: 'USD',
-            notifications: {
-              billReminders: true,
-              budgetAlerts: true,
-              goalProgress: true,
-            },
+      // Mock login success
+      dispatch(setUser({
+        id: '1',
+        email: formData.email,
+        name: 'Demo User',
+        preferences: {
+          currency: 'USD',
+          language: 'en',
+          theme: 'light',
+          notifications: {
+            email: true,
+            push: true,
+            billReminders: true,
           },
-        })
-      );
-
+        },
+      }));
       navigate('/');
-    } catch (err) {
-      setError('Invalid email or password. Please try again.');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      setError('Invalid email or password');
     }
   };
 
@@ -130,7 +119,7 @@ const Login = () => {
           </Alert>
         )}
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
             label="Email"
